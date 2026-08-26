@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><title>HTTPReplay Studio</title>
+<style>body{font-family:system-ui;background:#101820;color:#e8eef5;margin:2rem} .card{background:#1c2834;padding:1rem;border-radius:8px;margin:0.5rem;display:inline-block} table{border-collapse:collapse;width:100%%;margin-top:1rem} th,td{border:1px solid #334;padding:0.5rem;text-align:left}</style>
+</head><body><h1>HTTPReplay Studio</h1><button onclick="refresh()">刷新</button><div id="stats"></div><div id="list"></div>
+<script>async function refresh(){
+const s=await fetch('/api/stats').then(r=>r.json());
+document.getElementById('stats').innerHTML=Object.entries(s).map(([k,v])=>'<div class="card">'+k+': '+v+'</div>').join('');
+const items=await fetch('/api/interactions').then(r=>r.json());
+document.getElementById('list').innerHTML='<table><tr><th>ID</th><th>Method</th><th>URL</th><th>Status</th></tr>'+
+items.map(it=>'<tr><td>'+it.ID+'</td><td>'+it.Method+'</td><td>'+it.URL+'</td><td>'+it.Status+'</td></tr>').join('')+'</table>';
+}
+refresh();</script></body></html>
