@@ -155,7 +155,9 @@ func (c *Cassette) CloseFlushCount() int {
 }
 
 func (c *Cassette) bumpReplayed() {
+	c.mu.Lock()
 	c.stats.Replayed++
+	c.mu.Unlock()
 }
 
 func (c *Cassette) bumpMiss() {

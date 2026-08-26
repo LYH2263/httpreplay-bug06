@@ -5,7 +5,7 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"runtime"
+	"sync"
 
 	"github.com/LYH2263/go-httpreplay/internal/match"
 	"github.com/LYH2263/go-httpreplay/internal/normalize"
@@ -16,6 +16,7 @@ type Player struct {
 	matcher   match.Matcher
 	norm      normalize.Config
 	matchBody bool
+	mu        sync.Mutex
 	used      map[string]bool
 }
 
@@ -52,13 +53,14 @@ func (p *Player) RoundTrip(req *http.Request) (*http.Response, error) {
 		p.cassette.bumpMiss()
 		return nil, ErrNoMatch
 	}
-	runtime.Gosched()
 	p.cassette.bumpReplayed()
 	return buildResponse(it), nil
 }
 
 func (p *Player) findMatch(ctx context.Context, req normalize.NormalizedRequest, body []byte) (Interaction, bool, error) {
 	items := p.cassette.Interactions()
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	for _, it := range items {
 		if err := ctx.Err(); err != nil {
 			return Interaction{}, false, err
@@ -96,6 +98,8 @@ func buildResponse(it Interaction) *http.Response {
 }
 
 func (p *Player) Reset() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.used = make(map[string]bool)
 }
 
